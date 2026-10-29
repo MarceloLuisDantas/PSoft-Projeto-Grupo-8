@@ -13,9 +13,11 @@ import java.util.*;
 public class TurmaService {
 
     private final TurmaRepository repo;
+    private final EstudanteService estudanteService;
 
-    public TurmaService(TurmaRepository repo) {
+    public TurmaService(TurmaRepository repo, EstudanteService estudanteService) {
         this.repo = repo;
+        this.estudanteService = estudanteService;
     }
 
     public Turma criar(TurmaDTO dto) {
@@ -49,6 +51,38 @@ public class TurmaService {
         Turma t = buscar(id);
         t.setStatus(StatusTurma.ENCERRADA);
         return repo.save(t);
+    }
+
+    @Transactional
+    public Turma adicionarEstudante(Long turmaId, Long estudanteId) {
+        Turma t = buscar(turmaId);
+        if (t.getStatus() == StatusTurma.ENCERRADA) {
+            throw new RegraNegocioException("Turma encerrada não pode receber novos estudantes.");
+        }
+        Estudante e = estudanteService.buscar(estudanteId);
+        if (!t.getEstudantes().add(e)) {
+            throw new RegraNegocioException("Estudante já está associado a esta turma.");
+        }
+        return repo.save(t);
+    }
+
+    @Transactional
+    public Turma removerEstudante(Long turmaId, Long estudanteId) {
+        Turma t = buscar(turmaId);
+        Estudante e = estudanteService.buscar(estudanteId);
+        if (!t.getEstudantes().remove(e)) {
+            throw new RegraNegocioException("Estudante não está associado a esta turma.");
+        }
+        return repo.save(t);
+    }
+
+    public Set<Estudante> listarEstudantes(Long turmaId) {
+        return buscar(turmaId).getEstudantes();
+    }
+
+    /** Usado pelas atividades: só estudantes associados podem participar. */
+    public boolean estudantePertence(Long turmaId, Long estudanteId) {
+        return buscar(turmaId).getEstudantes().stream().anyMatch(e -> e.getId().equals(estudanteId));
     }
 
     private void copiar(TurmaDTO dto, Turma t) {

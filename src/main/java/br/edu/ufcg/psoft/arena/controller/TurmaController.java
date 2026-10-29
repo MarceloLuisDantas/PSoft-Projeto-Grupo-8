@@ -13,7 +13,7 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/turmas")
-@Tag(name = "Turmas (US4)")
+@Tag(name = "Turmas (US4 e US5)")
 public class TurmaController {
 
     private final TurmaService service;
@@ -40,4 +40,16 @@ public class TurmaController {
     @PatchMapping("/{id}/encerrar")
     @Operation(summary = "Encerrar turma (status ENCERRADA)")
     public Turma encerrar(@PathVariable Long id) { return service.encerrar(id); }
+
+    @GetMapping("/{id}/estudantes")
+    @Operation(summary = "Listar estudantes da turma")
+    public Set<Estudante> estudantes(@PathVariable Long id) { return service.listarEstudantes(id); }
+
+    @PostMapping("/{id}/estudantes/{estudanteId}")
+    @Operation(summary = "Associar estudante à turma (somente turmas ativas, sem duplicidade)")
+    public Turma adicionar(@PathVariable Long id, @PathVariable Long estudanteId) { return service.adicionarEstudante(id, estudanteId); }
+
+    @DeleteMapping("/{id}/estudantes/{estudanteId}")
+    @Operation(summary = "Remover estudante da turma")
+    public Turma remover(@PathVariable Long id, @PathVariable Long estudanteId) { return service.removerEstudante(id, estudanteId); }
 }
